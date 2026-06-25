@@ -11,6 +11,7 @@ services:
       SITE_TITLE: "${SITE_TITLE:-Fabiano Weimar}"
       SITE_DESCRIPTION: "${SITE_DESCRIPTION:-Notes on software engineering and assorted topics.}"
       SITE_AUTHOR: "${SITE_AUTHOR:-Fabiano Weimar}"
+      DISABLE_AUTH: "${DISABLE_AUTH:-true}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-fabiano.weimar@gmail.com}"
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
       GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"

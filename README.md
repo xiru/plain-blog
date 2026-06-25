@@ -83,6 +83,23 @@ Anyone can click "Sign in", but only `ADMIN_EMAIL` is allowed past the gate.
 > 📖 Passo a passo detalhado (em português) para configurar uma conta Gmail
 > comum: **[AUTH.md](AUTH.md)**.
 
+## Customizing the site images
+
+Boilerplate SVG placeholders live in [`public/img/`](public/img/) and are served
+under `/assets/img/`:
+
+| File | Used for | Env override |
+| --- | --- | --- |
+| `avatar.svg` | Profile photo in the home hero | `IMG_AVATAR` |
+| `header-bg.svg` | Home hero banner background | `IMG_HEADER` |
+| `favicon.svg` | Browser tab icon | `IMG_FAVICON` |
+| `og-image.svg` | Social-share (Open Graph) preview | `IMG_OG` |
+
+To use your own photos, either **replace the files** in `public/img/` (keep the
+names) or point the `IMG_*` env vars at any path/URL. Raster images (JPG/PNG)
+work too — e.g. `IMG_AVATAR=/assets/img/avatar.jpg`. For social previews,
+exporting `og-image` to PNG/JPG is recommended for broad platform support.
+
 ## Writing posts
 
 Sign in, go to **/admin**, and create a post. The body is Markdown.

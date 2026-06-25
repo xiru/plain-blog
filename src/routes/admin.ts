@@ -36,7 +36,7 @@ export function adminRoutes(repo: PostRepository, config: Config): Router {
   });
 
   // Guard only the /admin paths; other routers handle public requests.
-  router.use("/admin", requireAdmin(config.adminEmail));
+  router.use("/admin", requireAdmin(config.adminEmail, config.disableAuth));
 
   // Dashboard: list posts with edit/delete actions.
   router.get("/admin", (_req, res) => {

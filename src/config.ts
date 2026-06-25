@@ -13,6 +13,19 @@ export interface SocialLinks {
   instagram?: string;
 }
 
+/** Customizable site imagery. Override the paths via env, or just replace the
+ *  files in public/img/. Paths are served under /assets (e.g. /assets/img/...). */
+export interface Branding {
+  /** Square profile photo shown in the home hero. */
+  avatar: string;
+  /** Wide banner image used as the home hero background. */
+  headerImage: string;
+  /** Browser tab / bookmark icon. */
+  favicon: string;
+  /** Open Graph / social-share preview image. */
+  ogImage: string;
+}
+
 export interface Config {
   port: number;
   /** Public base URL of the site, e.g. https://blog.example.com */
@@ -27,10 +40,17 @@ export interface Config {
     clientSecret: string;
   };
   sessionSecret: string;
+  /**
+   * When true, authentication is bypassed and the admin area is open to anyone.
+   * Intended for local development. Defaults to true — set DISABLE_AUTH=false to
+   * enforce Google sign-in.
+   */
+  disableAuth: boolean;
   dbPath: string;
   /** Absolute path to the directory where uploaded images are stored. */
   imagesDir: string;
   social: SocialLinks;
+  branding: Branding;
 }
 
 function bool(v: string | undefined): boolean {
@@ -52,6 +72,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       clientSecret: env.GOOGLE_CLIENT_SECRET || "",
     },
     sessionSecret: env.SESSION_SECRET || "change-me-in-production",
+    disableAuth: env.DISABLE_AUTH === undefined ? true : bool(env.DISABLE_AUTH),
     dbPath: env.DB_PATH || path.join(root, "data", "blog.db"),
     imagesDir: env.IMAGES_DIR || path.join(root, "images"),
     social: {
@@ -62,6 +83,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       flickr: env.SOCIAL_FLICKR,
       facebook: env.SOCIAL_FACEBOOK,
       instagram: env.SOCIAL_INSTAGRAM,
+    },
+    branding: {
+      avatar: env.IMG_AVATAR || "/assets/img/avatar.svg",
+      headerImage: env.IMG_HEADER || "/assets/img/header-bg.svg",
+      favicon: env.IMG_FAVICON || "/assets/img/favicon.svg",
+      ogImage: env.IMG_OG || "/assets/img/og-image.svg",
     },
   };
 }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Profile photo placeholder">
+  <!-- Boilerplate avatar. Replace with your own square photo (e.g. avatar.jpg)
+       and point IMG_AVATAR at it, or just overwrite this file. -->
+  <defs>
+    <linearGradient id="avatarGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b5532a"/>
+      <stop offset="1" stop-color="#e0784a"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#avatarGradient)"/>
+  <text x="100" y="104" font-family="Georgia, 'Times New Roman', serif" font-size="84"
+        font-weight="600" fill="#ffffff" text-anchor="middle" dominant-baseline="central">FW</text>
+</svg>

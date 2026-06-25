@@ -1,8 +1,11 @@
 <%- include("partials/header") %>
 
-<section class="intro">
-  <h1><%= site.title %></h1>
-  <p class="lead"><%= site.description %></p>
+<section class="hero" style="background-image: url('<%= branding.headerImage %>')">
+  <div class="hero-inner">
+    <img class="hero-avatar" src="<%= branding.avatar %>" alt="<%= site.author %>" width="110" height="110">
+    <h1><%= site.title %></h1>
+    <p class="lead"><%= site.description %></p>
+  </div>
 </section>
 
 <% if (tags && tags.length) { %>

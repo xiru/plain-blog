@@ -43,8 +43,13 @@ export function createApp(db: DB, config: Config, deps: AppDeps = {}): Express {
       url: config.siteUrl,
     };
     res.locals.social = activeSocialLinks(config.social);
+    res.locals.branding = config.branding;
     res.locals.currentUser = req.session.user || null;
-    res.locals.isAdmin = isAuthorized(req.session.user?.email, config.adminEmail);
+    res.locals.isAdmin =
+      config.disableAuth || isAuthorized(req.session.user?.email, config.adminEmail);
+    // When auth is disabled there is no real session, so login/logout are
+    // meaningless — templates use this to hide those links.
+    res.locals.authEnabled = !config.disableAuth;
     res.locals.pageTitle = null;
     next();
   });

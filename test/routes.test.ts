@@ -12,12 +12,17 @@ import fs from "fs";
 const ADMIN = "fabiano.weimar@gmail.com";
 const TMP_IMAGES = fs.mkdtempSync(path.join(os.tmpdir(), "plain-blog-test-"));
 
-function makeApp(email: string, opts: { throwOnVerify?: boolean } = {}) {
+function makeApp(
+  email: string,
+  opts: { throwOnVerify?: boolean; disableAuth?: boolean } = {}
+) {
   const db: DB = openDb(":memory:");
   const config: Config = loadConfig({
     ADMIN_EMAIL: ADMIN,
     SITE_URL: "http://x.test",
     IMAGES_DIR: TMP_IMAGES,
+    // Tests exercise real auth unless a case opts into disabling it.
+    DISABLE_AUTH: opts.disableAuth ? "true" : "false",
   });
   const fakeAuth: GoogleAuth = {
     authUrl: () => "https://accounts.google.com/o/oauth2/auth?fake=1",
@@ -52,6 +57,15 @@ describe("public routes", () => {
     const res = await request(app).get("/");
     expect(res.status).toBe(200);
     expect(res.text).toContain("First Post");
+  });
+
+  it("renders branding images in the hero and head", async () => {
+    const res = await request(app).get("/");
+    expect(res.text).toContain('class="hero-avatar"');
+    expect(res.text).toContain("/assets/img/avatar.svg");
+    expect(res.text).toContain("/assets/img/header-bg.svg");
+    expect(res.text).toContain('rel="icon"');
+    expect(res.text).toContain('property="og:image"');
   });
 
   it("serves a post permalink", async () => {
@@ -152,6 +166,43 @@ describe("auth routes", () => {
   });
 });
 
+describe("DISABLE_AUTH flag", () => {
+  it("lets anonymous users reach /admin when auth is disabled", async () => {
+    const { app } = makeApp(ADMIN, { disableAuth: true });
+    const res = await request(app).get("/admin");
+    expect(res.status).toBe(200);
+    expect(res.text).toContain("Dashboard");
+  });
+
+  it("lets anonymous users create posts when auth is disabled", async () => {
+    const { app, repo } = makeApp(ADMIN, { disableAuth: true });
+    const res = await request(app)
+      .post("/admin/posts")
+      .type("form")
+      .send({ title: "Open Post", description: "Body", publishedAt: "2026-01-01", tags: "" });
+    expect(res.status).toBe(302);
+    expect(repo.getBySlug("open-post")).not.toBeNull();
+  });
+
+  it("hides the logout link when auth is disabled", async () => {
+    const { app } = makeApp(ADMIN, { disableAuth: true });
+    const res = await request(app).get("/admin");
+    expect(res.text).not.toContain('action="/logout"');
+    expect(res.text).not.toContain("Sign out");
+  });
+
+  it("disables the login flow when auth is disabled", async () => {
+    const { app } = makeApp(ADMIN, { disableAuth: true });
+    const login = await request(app).get("/login");
+    expect(login.status).toBe(302);
+    expect(login.headers.location).toBe("/admin");
+
+    const google = await request(app).get("/auth/google");
+    expect(google.status).toBe(302);
+    expect(google.headers.location).toBe("/admin");
+  });
+});
+
 describe("admin routes (authenticated)", () => {
   it("renders the new and edit forms, 404s a missing edit", async () => {
     const { app, repo } = makeApp(ADMIN);
@@ -201,9 +252,11 @@ describe("admin routes (authenticated)", () => {
     const { app, repo } = makeApp(ADMIN);
     const agent = await login(app);
 
-    // reaches the dashboard
+    // reaches the dashboard and sees the logout link (auth enabled)
     const dash = await agent.get("/admin");
     expect(dash.status).toBe(200);
+    expect(dash.text).toContain('action="/logout"');
+    expect(dash.text).toContain("Sign out");
 
     // create
     const create = await agent

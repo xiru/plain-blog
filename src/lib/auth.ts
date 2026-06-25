@@ -58,10 +58,14 @@ export function createGoogleAuth(opts: {
   };
 }
 
-/** Express middleware factory: guards admin routes. */
-export function requireAdmin(adminEmail: string) {
+/**
+ * Express middleware factory: guards admin routes.
+ * When `disableAuth` is true the guard is a no-op (everyone is let through) —
+ * useful for local development without configuring Google OAuth.
+ */
+export function requireAdmin(adminEmail: string, disableAuth = false) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (isAuthorized(req.session.user?.email, adminEmail)) {
+    if (disableAuth || isAuthorized(req.session.user?.email, adminEmail)) {
       next();
       return;
     }

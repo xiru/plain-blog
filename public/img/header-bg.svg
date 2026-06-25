@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Header banner placeholder">
+  <!-- Boilerplate header/cover banner. Replace with your own wide image
+       (point IMG_HEADER at it) or overwrite this file. -->
+  <defs>
+    <linearGradient id="headerGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c1b1a"/>
+      <stop offset="1" stop-color="#3a2f29"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="500" fill="url(#headerGradient)"/>
+  <circle cx="1300" cy="110" r="270" fill="#b5532a" opacity="0.18"/>
+  <circle cx="1500" cy="430" r="190" fill="#e0784a" opacity="0.12"/>
+  <circle cx="180" cy="440" r="230" fill="#b5532a" opacity="0.10"/>
+  <circle cx="560" cy="60" r="120" fill="#e0784a" opacity="0.08"/>
+</svg>

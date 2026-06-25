@@ -6,7 +6,8 @@ export function authRoutes(auth: GoogleAuth, config: Config): Router {
   const router = Router();
 
   router.get("/login", (req, res) => {
-    if (isAuthorized(req.session.user?.email, config.adminEmail)) {
+    // Auth disabled, or already signed in -> nothing to log into.
+    if (config.disableAuth || isAuthorized(req.session.user?.email, config.adminEmail)) {
       res.redirect("/admin");
       return;
     }
@@ -15,6 +16,10 @@ export function authRoutes(auth: GoogleAuth, config: Config): Router {
 
   // Kick off the Google OAuth flow.
   router.get("/auth/google", (_req, res) => {
+    if (config.disableAuth) {
+      res.redirect("/admin");
+      return;
+    }
     res.redirect(auth.authUrl());
   });
 

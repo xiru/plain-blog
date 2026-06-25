@@ -6,7 +6,17 @@
   <title><%= pageTitle ? pageTitle + " · " + site.title : site.title %></title>
   <meta name="description" content="<%= site.description %>">
   <meta name="author" content="<%= site.author %>">
+  <link rel="icon" type="image/svg+xml" href="<%= branding.favicon %>">
   <link rel="alternate" type="application/rss+xml" title="<%= site.title %>" href="/rss.xml">
+
+  <!-- Open Graph / Twitter social-share preview -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="<%= site.title %>">
+  <meta property="og:title" content="<%= pageTitle ? pageTitle : site.title %>">
+  <meta property="og:description" content="<%= site.description %>">
+  <meta property="og:image" content="<%= site.url %><%= branding.ogImage %>">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="<%= site.url %><%= branding.ogImage %>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -21,9 +31,11 @@
         <a href="/rss.xml">RSS</a>
         <% if (isAdmin) { %>
           <a href="/admin">Admin</a>
-          <form method="post" action="/logout" class="inline-form">
-            <button type="submit" class="linklike">Sign out</button>
-          </form>
+          <% if (authEnabled) { %>
+            <form method="post" action="/logout" class="inline-form">
+              <button type="submit" class="linklike">Sign out</button>
+            </form>
+          <% } %>
         <% } %>
       </nav>
     </div>
