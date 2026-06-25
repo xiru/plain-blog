@@ -1,0 +1,33 @@
+services:
+  blog:
+    build: .
+    image: plain-blog
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      PORT: "3000"
+      SITE_URL: "${SITE_URL:-http://localhost:3000}"
+      SITE_TITLE: "${SITE_TITLE:-Fabiano Weimar}"
+      SITE_DESCRIPTION: "${SITE_DESCRIPTION:-Notes on software engineering and assorted topics.}"
+      SITE_AUTHOR: "${SITE_AUTHOR:-Fabiano Weimar}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-fabiano.weimar@gmail.com}"
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      SESSION_SECRET: "${SESSION_SECRET:-change-me-in-production}"
+      DB_PATH: "/app/data/blog.db"
+      IMAGES_DIR: "/app/images"
+      # Social links
+      SOCIAL_TWITTER: "${SOCIAL_TWITTER:-}"
+      SOCIAL_GITHUB: "${SOCIAL_GITHUB:-}"
+      SOCIAL_LINKEDIN: "${SOCIAL_LINKEDIN:-}"
+      SOCIAL_SLIDESHARE: "${SOCIAL_SLIDESHARE:-}"
+      SOCIAL_FLICKR: "${SOCIAL_FLICKR:-}"
+      SOCIAL_FACEBOOK: "${SOCIAL_FACEBOOK:-}"
+      SOCIAL_INSTAGRAM: "${SOCIAL_INSTAGRAM:-}"
+    volumes:
+      - blog-data:/app/data
+      - ./images:/app/images
+
+volumes:
+  blog-data:

@@ -1,0 +1,23 @@
+<%- include("partials/header") %>
+
+<section class="intro">
+  <h1>#<%= tag %></h1>
+  <p class="lead"><%= posts.length %> post<%= posts.length === 1 ? "" : "s" %> tagged <strong>#<%= tag %></strong>. <a href="/">All posts</a></p>
+</section>
+
+<section class="post-list">
+  <% if (!posts.length) { %>
+    <p class="empty">No posts with this tag.</p>
+  <% } %>
+  <% posts.forEach(function(post) { %>
+    <article class="post-card">
+      <h2><a href="/posts/<%= post.slug %>"><%= post.title %></a></h2>
+      <p class="post-meta">
+        <time datetime="<%= post.publishedAt %>"><%= new Date(post.publishedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) %></time>
+      </p>
+      <p class="excerpt"><%= post.excerpt %></p>
+    </article>
+  <% }); %>
+</section>
+
+<%- include("partials/footer") %>

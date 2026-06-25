@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle ? pageTitle + " · " + site.title : site.title %></title>
+  <meta name="description" content="<%= site.description %>">
+  <meta name="author" content="<%= site.author %>">
+  <link rel="alternate" type="application/rss+xml" title="<%= site.title %>" href="/rss.xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/"><%= site.title %></a>
+      <nav class="nav">
+        <a href="/">Posts</a>
+        <a href="/rss.xml">RSS</a>
+        <% if (isAdmin) { %>
+          <a href="/admin">Admin</a>
+          <form method="post" action="/logout" class="inline-form">
+            <button type="submit" class="linklike">Sign out</button>
+          </form>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+  <main class="container">

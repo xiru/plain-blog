@@ -1,0 +1,13 @@
+node_modules/
+dist/
+data/
+coverage/
+.env
+*.log
+
+# Local editor/tool settings
+.claude/settings.local.json
+
+# Uploaded images are runtime data; keep the folder, ignore its contents.
+images/*
+!images/.gitkeep

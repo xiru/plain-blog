@@ -1,0 +1,18 @@
+<%- include("partials/header") %>
+
+<section class="login">
+  <h1>Sign in</h1>
+  <p class="lead">Only the site owner can publish posts.</p>
+  <% if (error) { %>
+    <p class="error">
+      <% if (error === "unauthorized") { %>
+        That Google account is not authorized to edit this blog.
+      <% } else { %>
+        Sign-in failed. Please try again.
+      <% } %>
+    </p>
+  <% } %>
+  <a class="btn btn-google" href="/auth/google">Continue with Google</a>
+</section>
+
+<%- include("partials/footer") %>
