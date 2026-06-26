@@ -1,4 +1,4 @@
-import express, { Express } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import path from "path";
 import fs from "fs";
@@ -15,22 +15,67 @@ export interface AppDeps {
   googleAuth?: GoogleAuth;
 }
 
+/**
+ * Content-Security-Policy. Scripts and the bulk of resources are restricted to
+ * the site's own origin; only Google Fonts is allowed as an external source.
+ * `style-src 'unsafe-inline'` is required for the hero's inline background-image
+ * and is low risk (no inline scripts are allowed).
+ */
+const CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "form-action 'self'",
+  "img-src 'self' data:",
+  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "script-src 'self'",
+].join("; ");
+
 /** Builds the Express app. Pure wiring — no listening, so it's easy to test. */
 export function createApp(db: DB, config: Config, deps: AppDeps = {}): Express {
   const app = express();
   const repo = new PostRepository(db);
+  const isHttps = config.siteUrl.startsWith("https://");
+
+  // Don't advertise the framework, and trust the proxy when behind TLS.
+  app.disable("x-powered-by");
+  if (isHttps) app.set("trust proxy", 1);
 
   app.set("view engine", "ejs");
   app.set("views", path.join(__dirname, "..", "views"));
 
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
+  // Security headers applied to every response (including static files).
+  app.use((_req, res, next) => {
+    res.setHeader("Content-Security-Policy", CSP);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    if (isHttps) {
+      res.setHeader(
+        "Strict-Transport-Security",
+        "max-age=15552000; includeSubDomains"
+      );
+    }
+    next();
+  });
+
+  // Cap request bodies to bound memory use / abuse.
+  app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+  app.use(express.json({ limit: "1mb" }));
   app.use(
     session({
+      name: "sid",
       secret: config.sessionSecret,
       resave: false,
       saveUninitialized: false,
-      cookie: { httpOnly: true, sameSite: "lax", maxAge: 1000 * 60 * 60 * 24 * 7 },
+      cookie: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isHttps, // require HTTPS for the cookie in production
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      },
     })
   );
 
@@ -75,6 +120,29 @@ export function createApp(db: DB, config: Config, deps: AppDeps = {}): Express {
   // 404 fallback.
   app.use((_req, res) => {
     res.status(404).render("404", { pageTitle: "Not found" });
+  });
+
+  // Central error handler. Logs server-side and returns a self-contained page.
+  // It deliberately does NOT use res.render / res.locals: errors can occur before
+  // those locals are populated (e.g. a body-parser failure), and an error handler
+  // must never throw — otherwise Express's default handler leaks the stack trace.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    // eslint-disable-next-line no-console
+    console.error(err);
+    if (res.headersSent) return;
+    const status = (err as { status?: number }).status || 500;
+    res
+      .status(status)
+      .type("html")
+      .send(
+        `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">` +
+          `<title>Error</title></head><body style="font-family:sans-serif;` +
+          `max-width:640px;margin:4rem auto;padding:0 1rem">` +
+          `<h1>${status} — Something went wrong</h1>` +
+          `<p>An unexpected error occurred. <a href="/">Back home</a>.</p>` +
+          `</body></html>`
+      );
   });
 
   return app;

@@ -43,26 +43,6 @@
   </div>
 </form>
 
-<script>
-  document.getElementById("uploadBtn").addEventListener("click", async function () {
-    var input = document.getElementById("imageFile");
-    var status = document.getElementById("uploadStatus");
-    if (!input.files || !input.files[0]) { status.textContent = "Choose a file first."; return; }
-    status.textContent = "Uploading…";
-    var fd = new FormData();
-    fd.append("image", input.files[0]);
-    try {
-      var res = await fetch("/admin/upload", { method: "POST", body: fd });
-      if (!res.ok) throw new Error("upload failed");
-      var data = await res.json();
-      var textarea = document.getElementById("description");
-      var snippet = "\n\n![left|caption](" + data.url + ")\n\n";
-      textarea.value += snippet;
-      status.textContent = "Inserted " + data.url;
-    } catch (e) {
-      status.textContent = "Upload failed.";
-    }
-  });
-</script>
+<script src="/assets/js/admin.js" defer></script>
 
 <%- include("../partials/footer") %>

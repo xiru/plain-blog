@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -11,6 +11,20 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * Raster image types only. SVG is deliberately excluded: an uploaded SVG served
+ * from /images could carry inline scripts and execute when opened directly.
+ */
+const ALLOWED_IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".avif",
+]);
+const ALLOWED_IMAGE_MIME = /^image\/(jpe?g|png|gif|webp|avif)$/;
+
 export function adminRoutes(repo: PostRepository, config: Config): Router {
   const router = Router();
 
@@ -21,6 +35,8 @@ export function adminRoutes(repo: PostRepository, config: Config): Router {
       cb(null, config.imagesDir);
     },
     filename: (_req, file, cb) => {
+      // Build the stored name ourselves from a slug + extension, so a malicious
+      // original filename (e.g. "../../etc/passwd") can never escape the folder.
       const ext = path.extname(file.originalname).toLowerCase();
       const base = slugify(path.basename(file.originalname, ext)) || "image";
       const stamp = Date.now().toString(36);
@@ -29,9 +45,12 @@ export function adminRoutes(repo: PostRepository, config: Config): Router {
   });
   const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024, files: 1 },
     fileFilter: (_req, file, cb) => {
-      cb(null, /^image\//.test(file.mimetype));
+      const ext = path.extname(file.originalname).toLowerCase();
+      const ok =
+        ALLOWED_IMAGE_MIME.test(file.mimetype) && ALLOWED_IMAGE_EXTENSIONS.has(ext);
+      cb(null, ok);
     },
   });
 
@@ -118,13 +137,26 @@ export function adminRoutes(repo: PostRepository, config: Config): Router {
   });
 
   // Upload an image; returns JSON with the public URL for use in Markdown.
-  router.post("/admin/upload", upload.single("image"), (req, res) => {
-    if (!req.file) {
-      res.status(400).json({ error: "No image uploaded" });
-      return;
+  // The multer error is caught so an oversized/invalid upload returns 400, not 500.
+  router.post(
+    "/admin/upload",
+    (req: Request, res: Response, next: NextFunction) => {
+      upload.single("image")(req, res, (err: unknown) => {
+        if (err) {
+          res.status(400).json({ error: "Upload rejected" });
+          return;
+        }
+        next();
+      });
+    },
+    (req, res) => {
+      if (!req.file) {
+        res.status(400).json({ error: "No valid image uploaded" });
+        return;
+      }
+      res.json({ url: `/images/${req.file.filename}` });
     }
-    res.json({ url: `/images/${req.file.filename}` });
-  });
+  );
 
   return router;
 }

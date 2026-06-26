@@ -36,8 +36,17 @@ export function authRoutes(auth: GoogleAuth, config: Config): Router {
         res.redirect("/login?error=unauthorized");
         return;
       }
-      req.session.user = profile;
-      res.redirect("/admin");
+      // Regenerate the session on login to prevent session fixation.
+      req.session.regenerate((regenErr) => {
+        if (regenErr) {
+          res.redirect("/login?error=auth_failed");
+          return;
+        }
+        req.session.user = profile;
+        req.session.save((saveErr) => {
+          res.redirect(saveErr ? "/login?error=auth_failed" : "/admin");
+        });
+      });
     } catch (err) {
       res.redirect("/login?error=auth_failed");
     }

@@ -18,6 +18,9 @@ client framework, few moving parts.
   Facebook, Instagram) shown on every page.
 - Fully unit-tested, Dockerized, with a `docker-compose` for local runs.
 
+See [SECURITY.md](SECURITY.md) for the security review (OWASP Top 10) and the
+hardening applied.
+
 ## Tech stack
 
 TypeScript · Express · EJS templates · better-sqlite3 · marked · Vitest.

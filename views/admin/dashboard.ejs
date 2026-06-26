@@ -29,7 +29,7 @@
               <button type="submit" class="linklike">Retract</button>
             </form>
           <% } %>
-          <form method="post" action="/admin/posts/<%= post.id %>/delete" class="inline-form" onsubmit="return confirm('Delete this post?');">
+          <form method="post" action="/admin/posts/<%= post.id %>/delete" class="inline-form" data-confirm="Delete this post?">
             <button type="submit" class="linklike danger">Delete</button>
           </form>
         </td>
@@ -40,5 +40,7 @@
     <% } %>
   </tbody>
 </table>
+
+<script src="/assets/js/admin.js" defer></script>
 
 <%- include("../partials/footer") %>
