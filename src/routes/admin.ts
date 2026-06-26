@@ -38,9 +38,12 @@ export function adminRoutes(repo: PostRepository, config: Config): Router {
   // Guard only the /admin paths; other routers handle public requests.
   router.use("/admin", requireAdmin(config.adminEmail, config.disableAuth));
 
-  // Dashboard: list posts with edit/delete actions.
+  // Dashboard: list posts (including drafts) with edit/publish/delete actions.
   router.get("/admin", (_req, res) => {
-    res.render("admin/dashboard", { posts: repo.list(), pageTitle: "Dashboard" });
+    res.render("admin/dashboard", {
+      posts: repo.list({ includeDrafts: true }),
+      pageTitle: "Dashboard",
+    });
   });
 
   // New post form.
@@ -94,6 +97,18 @@ export function adminRoutes(repo: PostRepository, config: Config): Router {
       return;
     }
     res.redirect(`/posts/${post.slug}`);
+  });
+
+  // Publish a draft.
+  router.post("/admin/posts/:id/publish", (req, res) => {
+    repo.setStatus(Number(req.params.id), "published");
+    res.redirect("/admin");
+  });
+
+  // Retract a published post back to draft.
+  router.post("/admin/posts/:id/retract", (req, res) => {
+    repo.setStatus(Number(req.params.id), "draft");
+    res.redirect("/admin");
   });
 
   // Delete a post.

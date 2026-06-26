@@ -53,7 +53,8 @@ describe("public routes", () => {
   });
 
   it("renders the home page", async () => {
-    repo.create({ title: "First Post", description: "Hi", publishedAt: "2026-01-01", tags: ["ts"] });
+    const p = repo.create({ title: "First Post", description: "Hi", publishedAt: "2026-01-01", tags: ["ts"] });
+    repo.setStatus(p.id, "published");
     const res = await request(app).get("/");
     expect(res.status).toBe(200);
     expect(res.text).toContain("First Post");
@@ -68,8 +69,9 @@ describe("public routes", () => {
     expect(res.text).toContain('property="og:image"');
   });
 
-  it("serves a post permalink", async () => {
+  it("serves a published post permalink", async () => {
     const p = repo.create({ title: "Perma", description: "**body**", publishedAt: "2026-01-01", tags: [] });
+    repo.setStatus(p.id, "published");
     const res = await request(app).get(`/posts/${p.slug}`);
     expect(res.status).toBe(200);
     expect(res.text).toContain("<strong>body</strong>");
@@ -80,19 +82,56 @@ describe("public routes", () => {
     expect(res.status).toBe(404);
   });
 
-  it("lists posts by tag", async () => {
-    repo.create({ title: "Tagged", description: "x", publishedAt: "2026-01-01", tags: ["web"] });
+  it("lists published posts by tag", async () => {
+    const p = repo.create({ title: "Tagged", description: "x", publishedAt: "2026-01-01", tags: ["web"] });
+    repo.setStatus(p.id, "published");
     const res = await request(app).get("/tags/web");
     expect(res.status).toBe(200);
     expect(res.text).toContain("Tagged");
   });
 
-  it("serves an RSS feed", async () => {
-    repo.create({ title: "Feed Item", description: "x", publishedAt: "2026-01-01", tags: [] });
+  it("serves an RSS feed of published posts", async () => {
+    const p = repo.create({ title: "Feed Item", description: "x", publishedAt: "2026-01-01", tags: [] });
+    repo.setStatus(p.id, "published");
     const res = await request(app).get("/rss.xml");
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toContain("rss+xml");
     expect(res.text).toContain("Feed Item");
+  });
+});
+
+describe("draft visibility", () => {
+  it("hides drafts from anonymous visitors (home, tag, permalink, RSS)", async () => {
+    const { app, repo } = makeApp(ADMIN); // auth enabled -> anonymous viewer
+    const draft = repo.create({ title: "Secret Draft", description: "x", publishedAt: "2026-01-01", tags: ["wip"] });
+
+    const home = await request(app).get("/");
+    expect(home.text).not.toContain("Secret Draft");
+
+    const tag = await request(app).get("/tags/wip");
+    expect(tag.text).not.toContain("Secret Draft");
+
+    const perma = await request(app).get(`/posts/${draft.slug}`);
+    expect(perma.status).toBe(404);
+
+    const rss = await request(app).get("/rss.xml");
+    expect(rss.text).not.toContain("Secret Draft");
+  });
+
+  it("shows drafts to the owner (auth disabled = admin view)", async () => {
+    const { app, repo } = makeApp(ADMIN, { disableAuth: true });
+    const draft = repo.create({ title: "Secret Draft", description: "x", publishedAt: "2026-01-01", tags: ["wip"] });
+
+    const home = await request(app).get("/");
+    expect(home.text).toContain("Secret Draft");
+
+    const perma = await request(app).get(`/posts/${draft.slug}`);
+    expect(perma.status).toBe(200);
+    expect(perma.text).toContain("Draft");
+
+    // ...but drafts still never appear in the public RSS feed
+    const rss = await request(app).get("/rss.xml");
+    expect(rss.text).not.toContain("Secret Draft");
   });
 });
 
@@ -268,6 +307,7 @@ describe("admin routes (authenticated)", () => {
 
     const post = repo.getBySlug("made-via-http")!;
     expect(post.tags).toEqual(["ts", "web"]);
+    expect(post.status).toBe("draft"); // new posts start as drafts
 
     // edit keeps the slug
     const edit = await agent
@@ -281,5 +321,28 @@ describe("admin routes (authenticated)", () => {
     const del = await agent.post(`/admin/posts/${post.id}/delete`);
     expect(del.headers.location).toBe("/admin");
     expect(repo.getById(post.id)).toBeNull();
+  });
+
+  it("publishes and retracts a post via the admin buttons", async () => {
+    const { app, repo } = makeApp(ADMIN);
+    const agent = await login(app);
+    const post = repo.create({ title: "Toggle Me", description: "x", publishedAt: "2026-01-01", tags: [] });
+
+    // Dashboard shows the status badge and a Publish action for a draft.
+    const dash = await agent.get("/admin");
+    expect(dash.text).toContain("status-draft");
+    expect(dash.text).toContain(`/admin/posts/${post.id}/publish`);
+
+    const pub = await agent.post(`/admin/posts/${post.id}/publish`);
+    expect(pub.headers.location).toBe("/admin");
+    expect(repo.getById(post.id)!.status).toBe("published");
+
+    // Now the dashboard offers a Retract action instead.
+    const dash2 = await agent.get("/admin");
+    expect(dash2.text).toContain(`/admin/posts/${post.id}/retract`);
+
+    const ret = await agent.post(`/admin/posts/${post.id}/retract`);
+    expect(ret.headers.location).toBe("/admin");
+    expect(repo.getById(post.id)!.status).toBe("draft");
   });
 });

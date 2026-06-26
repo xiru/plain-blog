@@ -7,16 +7,28 @@
 
 <table class="admin-table">
   <thead>
-    <tr><th>Title</th><th>Date</th><th>Tags</th><th></th></tr>
+    <tr><th>Title</th><th>Status</th><th>Date</th><th>Tags</th><th></th></tr>
   </thead>
   <tbody>
     <% posts.forEach(function(post) { %>
       <tr>
         <td><a href="/posts/<%= post.slug %>"><%= post.title %></a></td>
+        <td>
+          <span class="status-badge status-<%= post.status %>"><%= post.status %></span>
+        </td>
         <td><%= post.publishedAt %></td>
         <td><%= post.tags.join(", ") %></td>
         <td class="row-actions">
           <a href="/admin/posts/<%= post.id %>/edit">Edit</a>
+          <% if (post.status === "draft") { %>
+            <form method="post" action="/admin/posts/<%= post.id %>/publish" class="inline-form">
+              <button type="submit" class="linklike">Publish</button>
+            </form>
+          <% } else { %>
+            <form method="post" action="/admin/posts/<%= post.id %>/retract" class="inline-form">
+              <button type="submit" class="linklike">Retract</button>
+            </form>
+          <% } %>
           <form method="post" action="/admin/posts/<%= post.id %>/delete" class="inline-form" onsubmit="return confirm('Delete this post?');">
             <button type="submit" class="linklike danger">Delete</button>
           </form>
@@ -24,7 +36,7 @@
       </tr>
     <% }); %>
     <% if (!posts.length) { %>
-      <tr><td colspan="4" class="empty">No posts yet.</td></tr>
+      <tr><td colspan="5" class="empty">No posts yet.</td></tr>
     <% } %>
   </tbody>
 </table>

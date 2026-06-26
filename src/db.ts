@@ -26,6 +26,7 @@ function migrate(db: DB): void {
       slug        TEXT NOT NULL UNIQUE,
       title       TEXT NOT NULL,
       description TEXT NOT NULL,
+      status      TEXT NOT NULL DEFAULT 'draft',
       published_at TEXT NOT NULL,
       created_at  TEXT NOT NULL,
       updated_at  TEXT NOT NULL
@@ -44,4 +45,11 @@ function migrate(db: DB): void {
 
     CREATE INDEX IF NOT EXISTS idx_posts_published_at ON posts(published_at DESC);
   `);
+
+  // Add the status column to databases created before it existed.
+  const columns = db.prepare(`PRAGMA table_info(posts)`).all() as { name: string }[];
+  if (!columns.some((c) => c.name === "status")) {
+    db.exec(`ALTER TABLE posts ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'`);
+  }
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);`);
 }

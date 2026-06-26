@@ -8,6 +8,7 @@ function post(over: Partial<Post>): Post {
     slug: "hello",
     title: "Hello",
     description: "Body **md**",
+    status: "published",
     publishedAt: "2026-01-01",
     createdAt: "2026-01-01",
     updatedAt: "2026-01-01",

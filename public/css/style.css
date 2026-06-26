@@ -281,6 +281,28 @@ h1 {
 .error { color: #c0392b; }
 .login { padding: 3rem 0; }
 
+/* Status badges & draft notice */
+.status-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+}
+.status-draft { color: var(--color-muted); background: var(--color-border); }
+.status-published { color: #fff; background: var(--color-accent); border-color: var(--color-accent); }
+.draft-notice {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: var(--color-accent);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius);
+  padding: 0.3rem 0.75rem;
+  margin: 0 0 1rem;
+}
+
 /* Admin table */
 .admin-table { width: 100%; border-collapse: collapse; margin-bottom: 3rem; }
 .admin-table th, .admin-table td {

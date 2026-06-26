@@ -4,11 +4,13 @@ A small, modern Markdown blog for a software engineer. Server-rendered, no
 client framework, few moving parts.
 
 - **Posts in Markdown** with title, date, a Markdown body, and multiple tags.
+- **Draft / published status** — posts start as drafts, hidden from visitors and
+  the RSS feed until you publish them; one click to publish or retract.
 - **SQLite** storage (`better-sqlite3`).
 - **Permalinks** — once a post is created its URL (`/posts/<slug>`) never changes,
   even if you rename the title.
 - **Tag navigation** — browse posts by tag at `/tags/<tag>`.
-- **RSS feed** of every post, newest first, at `/rss.xml`.
+- **RSS feed** of published posts, newest first, at `/rss.xml`.
 - **Floating images** — text wraps around images, controlled from CSS variables.
 - **Google sign-in** for publishing, restricted to a single account.
 - **No comments.**
@@ -104,6 +106,24 @@ exporting `og-image` to PNG/JPG is recommended for broad platform support.
 
 Sign in, go to **/admin**, and create a post. The body is Markdown.
 
+### Draft & published status
+
+Every post has a **status**, shown in the admin dashboard:
+
+- **draft** (the default for new posts) — hidden from visitors: it never shows on
+  the home page, tag pages, or the RSS feed, and its permalink returns 404 to
+  anyone who isn't signed in. The owner can still preview it (a "Draft" banner is
+  shown on the post page).
+- **published** — visible to everyone.
+
+In the dashboard, each row has a **Publish** button (for drafts) or a **Retract**
+button (for published posts) next to **Delete**. Publishing/retracting only
+changes visibility — the permalink stays fixed. Editing a post never changes its
+status.
+
+> With `DISABLE_AUTH=true` (the default, see [AUTH.md](AUTH.md)) you are treated
+> as the owner, so you can see and manage drafts without signing in.
+
 ### Images that float
 
 Upload an image from the editor (stored under `/images`), then use the inserted
@@ -132,7 +152,7 @@ src/
   lib/
     slug.ts          permalink slug generation
     markdown.ts      Markdown -> sanitized HTML, floating images
-    posts.ts         PostRepository (CRUD, tags)
+    posts.ts         PostRepository (CRUD, tags, draft/published status)
     rss.ts           RSS 2.0 feed builder
     auth.ts          Google OAuth + admin authorization
   routes/
